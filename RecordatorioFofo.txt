@@ -1,0 +1,11 @@
+Recordatorio de cosas que hacer 
+
+Revisar mas a fondo las validaciones y evitar el doble boton de calcular, talvez con que se limpien los campos de input y agregar
+una validacion de que sin campos no se realize(Creo que ya hay algo asi)
+
+Disenar de mejor manera el formulario(Poniendose de acuerdo con diego para no ser diferentes) y ademas tratar de centrar las cosas
+
+
+
+
+

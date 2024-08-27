@@ -19,7 +19,8 @@ from PySide6.QtWidgets import (QApplication, QLabel, QLineEdit, QMainWindow,
     QMenuBar, QPushButton, QSizePolicy, QStatusBar,
     QTabWidget, QWidget)
 import sympy as sp 
-from PySide6.QtWidgets import QMessageBox
+import tkinter
+import tkinter.messagebox
 
 
 class Ui_MainWindow(object):
@@ -315,15 +316,15 @@ class Ui_MainWindow(object):
         self.tabWidget_2.setCurrentIndex(0)
         
         #Eventos de botones de biseccion
-        self.btnCalcular_5.clicked.connect(self.calcularBiseccion)
-        self.btnLimpiar_5.clicked.connect(self.limpiarBisseccion)
+        self.btnCalcular_6.clicked.connect(self.calcularBiseccion)
+        self.btnLimpiar_6.clicked.connect(self.limpiarBisseccion)
         
         #Eventos de botones Falsa Posicion
         self.btnCalcular_7.clicked.connect(self.calcularFalsaPosicion)
         self.btnLimpiar_7.clicked.connect(self.limpiarFalsaPosicion)
         
         #Eventos de botones Punto Fijo
-        self.btnCalcular_5.clicked.connect(self.CalcularPuntoFijo)
+        self.btnCalcular_5.clicked.connect(self.calcularPuntoFijo)
         self.btnLimpiar_5.clicked.connect(self.LimpiarPuntoFijo)
 
 
@@ -447,16 +448,55 @@ class Ui_MainWindow(object):
         self.txtToleranciaRespuesta_6.setText(f"{tolerancia_final:.8f}")
         self.txtAfinal_6.setText(f"{a_final:.8f}")
         self.txtBfinal_5.setText(f"{b_final:.8f}")
-        self.txtIteracionFinal_6.setText(f"{iteraciones:.8f}")
+        self.txtIteracionFinal_6.setText(f"{last_valid_iteration:.0f}")
 
     def calcularBiseccion(self):
-        funcion = self.txtFuncion_6.text()
-        a = float(self.txtPrimerValor_6.text())
-        b = float(self.txtSegundoValor_6.text())
-        tol = float(self.txtTolerancia_6.text())
-        nmax = int(self.txtNmax.text())
-        
+        funcion = self.txtFuncion_6.text().strip()
+        a_text = self.txtPrimerValor_6.text().strip()
+        b_text = self.txtSegundoValor_6.text().strip()
+        tol_text = self.txtTolerancia_6.text().strip()
+        nmax_text = self.txtNmax_6.text().strip()
+
+        # Validar si la función está vacía
+        if not funcion:
+            tkinter.messagebox.showinfo( "Entrada inválida", "Por favor, ingresa una función f(x).")
+            return
+
+        # Validar si el valor 'a' es un número
+        try:
+            a = float(a_text)
+        except ValueError:
+            tkinter.messagebox.showinfo("Entrada inválida", "El valor 'a' debe ser un número.")
+            return
+
+        # Validar si el valor 'b' es un número
+        try:
+            b = float(b_text)
+        except ValueError:
+            tkinter.messagebox.showinfo("Entrada inválida", "El valor 'b' debe ser un número.")
+            return
+
+        # Validar si la tolerancia es un número y positiva
+        try:
+            tol = float(tol_text)
+            if tol <= 0:
+                raise ValueError
+        except ValueError:
+            tkinter.messagebox.showinfo("Entrada inválida", "La tolerancia debe ser un número positivo.")
+            return
+
+        # Validar si nmax es un entero y positivo
+        try:
+            nmax = int(nmax_text)
+            if nmax <= 0:
+                raise ValueError
+        except ValueError:
+            tkinter.messagebox.showinfo("Entrada inválida", "El número máximo de iteraciones debe ser un entero positivo.")
+            return
+
+        # Si todas las validaciones pasan, ejecutar el método
         self.biseccion(funcion, a, b, tol, nmax)
+
 
     def limpiarBisseccion(self):
         self.txtFuncion_6.clear()
@@ -472,9 +512,10 @@ class Ui_MainWindow(object):
         self.txtIteracionFinal_6.clear()
 
     #Metodos Falsa Posicion
-    def falsaPosicion(self,fx, a, b, e, nmax):
+    def falsaPosicion(self, fx, a, b, e, nmax):
         expr = sp.sympify(fx)
         fa = self.eval_func(expr, a)
+        fb = self.eval_func(expr, b)  # Inicializa fb aquí
 
         iteraciones = 0
         xrAnterior = None
@@ -488,6 +529,7 @@ class Ui_MainWindow(object):
         tolerancia_final = None
 
         while iteraciones < nmax:
+            # Calcular xrActual
             xrActual = b - ((fb * (b - a)) / (fb - fa))
             fxr = self.eval_func(expr, xrActual)
             
@@ -508,10 +550,10 @@ class Ui_MainWindow(object):
             
             if fa * fxr < 0:
                 b = xrActual
-                fb = fxr
+                fb = fxr  # Actualiza fb aquí
             else:
                 a = xrActual
-                fa = fxr
+                fa = fxr  # Actualiza fa aquí
             
             xrAnterior = xrActual
             iteraciones += 1
@@ -525,24 +567,55 @@ class Ui_MainWindow(object):
             tolerancia_final = tolerancia_calculada
 
         # Retornar los valores finales para mostrarlos después
-        
         self.txtIteracionFinal_7.setText(f"{iteraciones:.8f}")
         self.txtAfinal_7.setText(f"{a_final:.8f}")
         self.txtBfinal_6.setText(f"{b_final:.8f}")
         self.txtRaizRespuesta_7.setText(f"{xr_final:.8f}")
         self.txtToleranciaRespuesta_7.setText(f"{tolerancia_final:.8f}")
         self.txtIteracionFinal_7.setText(f"{last_valid_iteration:.0f}")
-        
     
     def calcularFalsaPosicion(self):
-        #fx, a, b, e, nmax
-        fx = self.txtFuncion_7.text()
-        a = float(self.txtPrimerValor_7.text())
-        b = float(self.txtSegundoValor_7.text())
-        e = float(self.txtTolerancia_7.text())
-        nmax = int(self.txtNmax_7.text())
+        # Validar si la función está vacía
+        if not self.txtFuncion_7.text().strip():
+            tkinter.messagebox.showinfo("Entrada inválida", "Por favor, ingresa una función f(x).")
+            return
+
+        # Validar si el valor 'a' es un número
+        try:
+            a = float(self.txtPrimerValor_7.text())
+        except ValueError:
+            tkinter.messagebox.showinfo("Entrada inválida", "El valor 'a' debe ser un número.")
+            return
+
+        # Validar si el valor 'b' es un número
+        try:
+            b = float(self.txtSegundoValor_7.text())
+        except ValueError:
+            tkinter.messagebox.showinfo("Entrada inválida", "El valor 'b' debe ser un número.")
+            return
+
+        # Validar si la tolerancia es un número y positiva
+        try:
+            e = float(self.txtTolerancia_7.text())
+            if e <= 0:
+                raise ValueError
+        except ValueError:
+            tkinter.messagebox.showinfo("Entrada inválida", "La tolerancia debe ser un número positivo.")
+            return
+
+        # Validar si nmax es un entero y positivo
+        try:
+            nmax = int(self.txtNmax_7.text())
+            if nmax <= 0:
+                raise ValueError
+        except ValueError:
+            tkinter.messagebox.showinfo("Entrada inválida", "El número máximo de iteraciones debe ser un entero positivo.")
+            return
+
+        fx = self.txtFuncion_7.text().strip()
         
-        self.calcularFalsaPosicion(fx,a,b,e,nmax)
+        # Si todas las validaciones pasan, ejecutar el método
+        self.falsaPosicion(fx, a, b, e, nmax)
     
     def limpiarFalsaPosicion(self):
         self.txtFuncion_7.clear()
@@ -596,44 +669,47 @@ class Ui_MainWindow(object):
             tolerancia_final = tolerancia_calculada
 
         # Retornar los valores finales para mostrarlos despues
-        self.txtIteracionFinal_5.setText(f"{last_valid_iteration:.8f}")
+        self.txtIteracionFinal_5.setText(f"{iteraciones:.0f}")
         self.txtRaizRespuesta_5.setText(f"{x_final:.8f}")
         self.txtAfinal_5.setText(f"{gx_final:.8f}")
         self.txtToleranciaRespuesta_5.setText(f"{tolerancia_final:.8f}")
     
-    def CalcularPuntoFijo(self):
+    def calcularPuntoFijo(self):
+        gx = self.txtFuncion_5.text().strip()
+        x0_text = self.txtPrimerValor_5.text().strip()
+        e_text = self.txtTolerancia_5.text().strip()
+        nmax_text = self.txtNmax_5.text().strip()
+
         # Validar si la función está vacía
-        if not self.txtFuncion_5.text().strip():
-            QMessageBox.warning(self, "Entrada inválida", "Por favor, ingresa una función g(x).")
+        if not gx:
+            tkinter.messagebox.showinfo("Entrada inválida", "Por favor, ingresa una función g(x).")
             return
 
         # Validar si el valor inicial es un número
         try:
-            x0 = float(self.txtPrimerValor_5.text())
+            x0 = float(x0_text)
         except ValueError:
-            QMessageBox.warning(self, "Entrada inválida", "El valor inicial debe ser un número.")
+            tkinter.messagebox.showinfo("Entrada inválida", "El valor inicial debe ser un número.")
             return
 
         # Validar si la tolerancia es un número y positiva
         try:
-            e = float(self.txtTolerancia_5.text())
+            e = float(e_text)
             if e <= 0:
                 raise ValueError
         except ValueError:
-            QMessageBox.warning(self, "Entrada inválida", "La tolerancia debe ser un número positivo.")
+            tkinter.messagebox.showinfo("Entrada inválida", "La tolerancia debe ser un número positivo.")
             return
 
         # Validar si nmax es un entero y positivo
         try:
-            nmax = int(self.txtNmax_5.text())
+            nmax = int(nmax_text)
             if nmax <= 0:
                 raise ValueError
         except ValueError:
-            QMessageBox.warning(self, "Entrada inválida", "El número máximo de iteraciones debe ser un entero positivo.")
+            tkinter.messagebox.showinfo("Entrada inválida", "El número máximo de iteraciones debe ser un entero positivo.")
             return
 
-        gx = self.txtFuncion_5.text().strip()
-        
         # Si todas las validaciones pasan, ejecutar el método
         self.puntoFijo(gx, x0, e, nmax)
     
