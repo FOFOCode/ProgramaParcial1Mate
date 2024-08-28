@@ -723,5 +723,199 @@ class Ui_MainWindow(object):
         self.txtAfinal_5.clear()
         self.txtToleranciaRespuesta_5.clear()
         
+    #Metodos para  el metodo de Newton-Raphson
+    def newtonRaphson(self, fx, x0, e, nmax):
+        expr = sp.sympify(fx)
+        deriv = sp.diff(expr, sp.Symbol('x'))
+        iteraciones = 0
+        xrAnterior = None
+        last_valid_iteration = None
+
+        # Variables para guardar los valores de la última iteración válida
+        x_final = None
+        fx_final = None
+        tolerancia_final = None
+
+        while iteraciones < nmax:
+            fx_value = self.eval_func(expr, x0)
+            fpx_value = self.eval_func(deriv, x0)
+            if fpx_value == 0:
+                tkinter.messagebox.showinfo("Error", "La derivada es cero. El método no puede continuar.")
+                return
+
+            xrActual = x0 - fx_value / fpx_value
+
+            if xrAnterior is None:
+                tolerancia_calculada = 100  # Inicialmente alta porque no hay valor anterior
+            else:
+                tolerancia_calculada = abs((xrActual - xrAnterior) / xrActual) * 100
+            
+            # Guardar valores de la última iteración válida
+            if tolerancia_calculada <= e:
+                last_valid_iteration = iteraciones + 1
+                x_final = xrActual
+                fx_final = self.eval_func(expr, x_final)
+                tolerancia_final = tolerancia_calculada
+                break
+
+            xrAnterior = xrActual
+            x0 = xrActual  # Actualizar x0 para la próxima iteración
+            iteraciones += 1
+
+        # Si no se alcanzó la tolerancia, guarda los últimos valores calculados
+        if x_final is None:
+            x_final = xrActual
+            fx_final = self.eval_func(expr, x_final)
+            tolerancia_final = tolerancia_calculada
+
+        # Retornar los valores finales para mostrarlos después
+        self.txtIteracionFinal_5.setText(f"{last_valid_iteration:.0f}")
+        self.txtRaizRespuesta_5.setText(f"{x_final:.8f}")
+        self.txtAfinal_5.setText(f"{fx_final:.8f}")
+        self.txtToleranciaRespuesta_5.setText(f"{tolerancia_final:.8f}")
+        
+    def calcularNewtonRaphson(self):
+        fx = self.txtFuncion_5.text().strip()
+        x0_text = self.txtPrimerValor_5.text().strip()
+        e_text = self.txtTolerancia_5.text().strip()
+        nmax_text = self.txtNmax_5.text().strip()
+
+        # Validar si la función está vacía
+        if not fx:
+            tkinter.messagebox.showinfo("Entrada inválida", "Por favor, ingresa una función f(x).")
+            return
+
+        # Validar si el valor inicial es un número
+        try:
+            x0 = float(x0_text)
+        except ValueError:
+            tkinter.messagebox.showinfo("Entrada inválida", "El valor inicial debe ser un número.")
+            return
+
+        # Validar si la tolerancia es un número y positiva
+        try:
+            e = float(e_text)
+            if e <= 0:
+                raise ValueError
+        except ValueError:
+            tkinter.messagebox.showinfo("Entrada inválida", "La tolerancia debe ser un número positivo.")
+            return
+
+        # Validar si nmax es un entero y positivo
+        try:
+            nmax = int(nmax_text)
+            if nmax <= 0:
+                raise ValueError
+        except ValueError:
+            tkinter.messagebox.showinfo("Entrada inválida", "El número máximo de iteraciones debe ser un entero positivo.")
+            return
+
+        # Si todas las validaciones pasan, ejecutar el método
+        self.newtonRaphson(fx, x0, e, nmax)
+
+    #Aca iria  el metodo limpiar newton raphson
+
+    #Metodos de la secante
+    def secante(self, fx, x0, x1, e, nmax):
+        expr = sp.sympify(fx)
+        iteraciones = 0
+        xrAnterior = None
+        last_valid_iteration = None
+
+        # Variables para guardar los valores de la última iteración válida
+        x_final = None
+        fx_final = None
+        tolerancia_final = None
+
+        while iteraciones < nmax:
+            fx0 = self.eval_func(expr, x0)
+            fx1 = self.eval_func(expr, x1)
+
+            if fx1 - fx0 == 0:
+                tkinter.messagebox.showinfo("Error", "División por cero en la secante. El método no puede continuar.")
+                return
+
+            xrActual = x1 - fx1 * (x1 - x0) / (fx1 - fx0)
+
+            if xrAnterior is None:
+                tolerancia_calculada = 100  # Inicialmente alta porque no hay valor anterior
+            else:
+                tolerancia_calculada = abs((xrActual - xrAnterior) / xrActual) * 100
+            
+            # Guardar valores de la última iteración válida
+            if tolerancia_calculada <= e:
+                last_valid_iteration = iteraciones + 1
+                x_final = xrActual
+                fx_final = self.eval_func(expr, x_final)
+                tolerancia_final = tolerancia_calculada
+                break
+
+            xrAnterior = xrActual
+            x0 = x1  # Actualizar x0 para la próxima iteración
+            x1 = xrActual  # Actualizar x1 para la próxima iteración
+            iteraciones += 1
+
+        # Si no se alcanzó la tolerancia, guarda los últimos valores calculados
+        if x_final is None:
+            x_final = xrActual
+            fx_final = self.eval_func(expr, x_final)
+            tolerancia_final = tolerancia_calculada
+
+        # Retornar los valores finales para mostrarlos después
+        self.txtIteracionFinal_5.setText(f"{last_valid_iteration:.0f}")
+        self.txtRaizRespuesta_5.setText(f"{x_final:.8f}")
+        self.txtAfinal_5.setText(f"{fx_final:.8f}")
+        self.txtToleranciaRespuesta_5.setText(f"{tolerancia_final:.8f}")
+    
+    def calcularSecante(self):
+        fx = self.txtFuncion_5.text().strip()
+        x0_text = self.txtPrimerValor_5.text().strip()
+        x1_text = self.txtSegundoValor_5.text().strip()
+        e_text = self.txtTolerancia_5.text().strip()
+        nmax_text = self.txtNmax_5.text().strip()
+
+        # Validar si la función está vacía
+        if not fx:
+            tkinter.messagebox.showinfo("Entrada inválida", "Por favor, ingresa una función f(x).")
+            return
+
+        # Validar si el valor inicial x0 es un número
+        try:
+            x0 = float(x0_text)
+        except ValueError:
+            tkinter.messagebox.showinfo("Entrada inválida", "El valor inicial x0 debe ser un número.")
+            return
+
+        # Validar si el valor inicial x1 es un número
+        try:
+            x1 = float(x1_text)
+        except ValueError:
+            tkinter.messagebox.showinfo("Entrada inválida", "El valor inicial x1 debe ser un número.")
+            return
+
+        # Validar si la tolerancia es un número y positiva
+        try:
+            e = float(e_text)
+            if e <= 0:
+                raise ValueError
+        except ValueError:
+            tkinter.messagebox.showinfo("Entrada inválida", "La tolerancia debe ser un número positivo.")
+            return
+
+        # Validar si nmax es un entero y positivo
+        try:
+            nmax = int(nmax_text)
+            if nmax <= 0:
+                raise ValueError
+        except ValueError:
+            tkinter.messagebox.showinfo("Entrada inválida", "El número máximo de iteraciones debe ser un entero positivo.")
+            return
+
+        # Si todas las validaciones pasan, ejecutar el método
+        self.secante(fx, x0, x1, e, nmax)
+
+
+
+        
 
         
